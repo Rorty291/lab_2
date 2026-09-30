@@ -36,7 +36,7 @@ template: dict = {
 fish_stat = lambda name: FISH_PRICES.get(name, template)
 fish_stat.__doc__ = "Повертає ціну риби за її назвою (0, якщо риби немає в прайсі)."
 
-inventory_value = lambda inv: sum(map(fish_stat, inv))
+inventory_value = lambda inv: sum(fish_stat(item)["price"] for item in inv)
 inventory_value.__doc__ = "Повертає загальну вартість усієї риби в інвентарі."
 
 
@@ -100,11 +100,12 @@ def output_inventory(inventory: list):
     print("\nВаш інвентар:")
     if not inventory:
         print("  (порожньо)")
+
     for number, item in enumerate(inventory, start=1):
         stats = fish_stat(item)
         print(f"  {number}. {item} — {stats["price"]}$ - {stats["weight"]}kg")
 
-    print(f"Загальна вартість: {inventory_value(inventory)}\n")
+    print(f"Загальна вартість: {inventory_value(inventory)}$\n")
 
 def sell_all(player: str) -> int:
     """
@@ -130,19 +131,28 @@ def show_market(min_price: int = 0):
     """
     records = [{"name": name, **stats} for name, stats in FISH_PRICES.items()]
 
-    selected = list(filter(lambda f: f["price"] >= min_price, records))
+    selected = list(
+        filter(
+            lambda f: f["price"] >= min_price,
+            records
+        )
+    )
     if not selected:
         print(f"Немає риби з ціною від {min_price}.\n")
         return
 
 
-    total = reduce(lambda acc, f: acc + f["price"], selected, 0)
+    total = reduce(
+        lambda acc, f: acc + f["price"],
+        selected,
+        0
+    )
 
     print(f"\nРинок (ціна від {min_price}")
     print(f"{'Риба':<14}{'Вага, кг':>9}{'Ціна':>8}")
 
     for f in selected:
-        print(f"{f['name']:<14}{f['weight']:>9}{f['price']:>8}")
+        print(f"{f['name']:<14}{f['weight']:>9}{f['price']:>7}$")
 
     print(f"Позицій: {len(selected)}, сумарна вартість: {total}\n")
 
@@ -223,7 +233,7 @@ def main():
                     amount = sell_fish(username)
 
                 if amount:
-                    print(f"Ви отримали: {amount}!\n")
+                    print(f"Ви отримали: {amount}$!\n")
 
             elif command == "cash":
                 print(f"Ваш баланс: {cash[username]}!\n")
